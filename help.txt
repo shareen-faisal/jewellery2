@@ -1,0 +1,11 @@
+How to open admin dashboard?
+1. Login with admin@gmail.com and user1
+2. Open /admin
+
+How to run backend
+$env:JAVA_HOME="C:\Program Files\Java\jdk-19"
+>> .\mvnw.cmd spring-boot:run
+
+How to run frontend
+cd client
+npm run dev
