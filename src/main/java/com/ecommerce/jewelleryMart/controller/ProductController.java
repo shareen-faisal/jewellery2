@@ -1,16 +1,24 @@
 package com.ecommerce.jewelleryMart.controller;
 
-import com.ecommerce.jewelleryMart.model.Product;
-import com.ecommerce.jewelleryMart.repository.ProductRepository;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.ecommerce.jewelleryMart.model.Product;
+import com.ecommerce.jewelleryMart.service.ProductService;
 
 @RestController
 @RequestMapping("/api/products")
@@ -18,8 +26,9 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
 
+    // -------- GET ALL PRODUCTS --------
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts(
             @RequestParam(required = false) String search,
@@ -27,89 +36,51 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String metalType
     ) {
-        List<Product> products = (search != null && !search.isEmpty())
-                ? productRepository.findByNameContainingIgnoreCase(search)
-                : productRepository.findAll();
-
-        if (category != null && !category.isEmpty()) {
-            products = products.stream()
-                    .filter(p -> p.getCategory() != null && p.getCategory().equalsIgnoreCase(category))
-                    .collect(Collectors.toList());
-        }
-
-        if (metalType != null && !metalType.isEmpty()) {
-            products = products.stream()
-                    .filter(p -> p.getMetalType() != null && p.getMetalType().equalsIgnoreCase(metalType))
-                    .collect(Collectors.toList());
-        }
-
-        if (sort != null && !sort.isEmpty()) {
-            switch (sort) {
-                case "priceLowToHigh":
-                    products.sort(Comparator.comparingDouble(Product::getPrice));
-                    break;
-                case "priceHighToLow":
-                    products.sort((a, b) -> Double.compare(b.getPrice(), a.getPrice()));
-                    break;
-                case "nameAsc":
-                    products.sort(Comparator.comparing(Product::getName, String.CASE_INSENSITIVE_ORDER));
-                    break;
-                case "nameDesc":
-                    products.sort(Comparator.comparing(Product::getName, String.CASE_INSENSITIVE_ORDER).reversed());
-                    break;
-                default:
-                    break;
-            }
-        }
+        List<Product> products =
+                productService.getAllProducts(search, sort, category, metalType);
 
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
+    // -------- GET PRODUCT BY ID --------
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
-        Optional<Product> product = productRepository.findById(id);
-        return product.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+        Optional<Product> product = productService.getProductById(id);
+
+        return product
+                .map(p -> new ResponseEntity<>(p, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    // -------- CREATE PRODUCT --------
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product savedProduct = productRepository.save(product);
+        Product savedProduct = productService.createProduct(product);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 
+    // -------- UPDATE PRODUCT --------
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product productDetails) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isPresent()) {
-            Product product = optionalProduct.get();
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable String id,
+            @RequestBody Product productDetails
+    ) {
+        Optional<Product> updatedProduct =
+                productService.updateProduct(id, productDetails);
 
-            // Update ALL fields explicitly
-            product.setName(productDetails.getName());
-            product.setPrice(productDetails.getPrice());
-            product.setCategory(productDetails.getCategory());
-            product.setMetalType(productDetails.getMetalType());
-            product.setImage(productDetails.getImage());
-            product.setDescription(productDetails.getDescription());
-            product.setWeight(productDetails.getWeight()); // EXPLICITLY SET WEIGHT
-
-
-            Product savedProduct = productRepository.save(product);
-
-
-            return ResponseEntity.ok(savedProduct);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return updatedProduct
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // -------- DELETE PRODUCT --------
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteProduct(@PathVariable String id) {
-        if (productRepository.existsById(id)) {
-            productRepository.deleteById(id);
+        boolean deleted = productService.deleteProduct(id);
+
+        if (deleted) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
