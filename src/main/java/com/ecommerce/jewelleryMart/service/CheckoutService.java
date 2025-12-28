@@ -1,15 +1,16 @@
 package com.ecommerce.jewelleryMart.service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.ecommerce.jewelleryMart.dto.DeliveryDetails;
 import com.ecommerce.jewelleryMart.dto.PaymentRequest;
 import com.ecommerce.jewelleryMart.model.Cart;
 import com.ecommerce.jewelleryMart.model.Order;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class CheckoutService {
@@ -20,7 +21,6 @@ public class CheckoutService {
     public Map<String, Object> getCartSummary(String userId) {
         Cart cart = cartService.getCartOrThrow(userId);
 
-        // Orchestration: Use Model for math, Service for data enrichment
         double totalAmount = cart.calculateTotal();
         List<Map<String, Object>> items = cartService.getCartItemsWithDetails(cart);
 

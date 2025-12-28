@@ -250,8 +250,8 @@ const Collections = () => {
             className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EBD6FB] text-gray-700"
           >
             <option value="">Sort By</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
+            <option value="priceLowToHigh">Price: Low to High</option>
+            <option value="priceHighToLow">Price: High to Low</option>
             <option value="weight-asc">Weight: Low to High</option>
             <option value="weight-desc">Weight: High to Low</option>
           </select>
